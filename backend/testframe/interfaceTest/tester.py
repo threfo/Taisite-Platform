@@ -36,7 +36,8 @@ class tester:
             from app import nlper
             self.nlper = nlper
         except ImportError as e:
-            raise ImportError('nlp模型导入失败！<%s>' % e)
+            pass
+            # raise ImportError('nlp模型导入失败！<%s>' % e)
 
         self.test_case_list = test_case_list
         self.domain = domain
@@ -140,27 +141,19 @@ class tester:
                 common.resolve_global_var(pre_resolve_var=test_case['route'], global_var_dic=self.global_vars) \
                     if isinstance(test_case['route'], str) else test_case['route']
             url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
+
         if 'requestMethod' in test_case:
             method = test_case['requestMethod']
-        if 'requestMethod' in test_case and 'presendParams' in test_case \
-            and test_case['requestMethod'].lower() == 'get':
-            url += '?'
-            for key, value in test_case['presendParams'].items():
-                if value is not None:
-                    get_method_params_value = common.resolve_global_var(pre_resolve_var=value,
-                                                                        global_var_dic=self.global_vars) \
-                        if isinstance(value, str) else value
-                    url += '%s=%s&' % (key, get_method_params_value)
-            url = url[0:(len(url) - 1)]
-        elif 'presendParams' in test_case and isinstance(test_case['presendParams'], dict):
+
+        if 'presendParams' in test_case and isinstance(test_case['presendParams'], dict):
             
             # dict 先转 str，方便全局变量替换
             test_case['presendParams'] = str(test_case['presendParams'])
-            
+
             # 全局替换
             test_case['presendParams'] = common.resolve_global_var(pre_resolve_var=test_case['presendParams'],
                                                                    global_var_dic=self.global_vars)
-            
+
             # 转回 dict
             test_case['presendParams'] = ast.literal_eval(test_case['presendParams'])
             
@@ -193,8 +186,11 @@ class tester:
             use_json_data = len(list(filter(lambda x: str(x).lower() == 'content-type' and 'json'
                                                       in headers[x], headers.keys() if headers else {}))) > 0
 
-            response = session.request(url=url, method=method, json=json_data, headers=headers, verify=False) if use_json_data\
-                else session.request(url=url, method=method, data=json_data, headers=headers, verify=False)
+            if test_case['requestMethod'].lower() == 'get':
+                response = session.request(url=url, method=method, params=json_data, headers=headers, verify=False)
+            else:
+                response = session.request(url=url, method=method, json=json_data, headers=headers, verify=False) if use_json_data\
+                    else session.request(url=url, method=method, data=json_data, headers=headers, verify=False)
 
         except BaseException as e:
            returned_data["status"] = 'failed'
