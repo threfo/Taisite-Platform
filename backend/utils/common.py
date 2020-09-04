@@ -225,6 +225,8 @@ def dict_get(dic, locators, default=None):
             end_index = int(slice_indexes[-1]) if slice_indexes[-1] else None
             value = dic[start_index:end_index]
             return value
+        elif isinstance(dic, str):
+            return dic
         return default
 
     if dic == {} or len(locators) < 1:
