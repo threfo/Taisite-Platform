@@ -149,6 +149,7 @@ def format_js_dic_to_python_dic(query_dic):
 
 
 def get_total_num_and_arranged_data(raw_model, query_dic, fuzzy_fields=None):
+
     query_dic = query_dic.to_dict() if query_dic.to_dict() else {}
     if fuzzy_fields is not None:
         if not isinstance(fuzzy_fields, list):
@@ -161,13 +162,7 @@ def get_total_num_and_arranged_data(raw_model, query_dic, fuzzy_fields=None):
                 query_dic[fuzzy_field] = re.compile(pre_compiled_str)
     query_dic = format_js_dic_to_python_dic(query_dic)
     raw_model_copy = copy.deepcopy(raw_model)
-    raw_model_data_copy = []
 
-    if not isinstance(raw_model_copy.find(), list):
-        try:
-            raw_model_data_copy = list(raw_model_copy.find({'isDeleted': {"$ne": True}}))
-        except BaseException as e:
-            raise TypeError('raw_data cannot convert to list: %s' % e)
     if not isinstance(query_dic, dict):
         raise TypeError('query_dic must be dict')
 
@@ -183,9 +178,10 @@ def get_total_num_and_arranged_data(raw_model, query_dic, fuzzy_fields=None):
 
     if not query_dic == {}:
         query_dic['isDeleted'] = {"$ne": True}
-        total_num = len(list(raw_model_copy.find(query_dic)))
+        # total_num = len(list(raw_model_copy.find(query_dic)))
+        total_num = raw_model_copy.find(query_dic).count()
     else:
-        total_num = len(raw_model_data_copy)
+        total_num = raw_model_copy.find(query_dic).count()
     if sort_by and order and format_order(order):
         sort_query = [(sort_by, format_order(order))]
     else:
@@ -203,6 +199,7 @@ def get_total_num_and_arranged_data(raw_model, query_dic, fuzzy_fields=None):
         else:
             arranged_data = raw_model_copy.find(query_dic).skip(skip).limit(size)
 
+    # TODO 性能优化
     return total_num, list(map(format_response_in_dic, map(raw_model_copy.filter_field, arranged_data)))
 
 
@@ -219,7 +216,8 @@ def dict_get(dic, locators, default=None):
     '''
 
     if not isinstance(dic, dict):
-        if isinstance(dic, str):
+        if can_convert_to_str(dic):
+            dic = str(dic)
             if len(locators) == 1 and is_slice_expression(locators[0]):
                 slice_indexes = locators[0].split(':')
                 start_index = int(slice_indexes[0]) if slice_indexes[0] else None
@@ -401,8 +399,7 @@ def frontend_date_str2datetime(input_str, timedelta=None):
 
 
 def is_valid_email(email):
-    re_email = re.compile(r'^[a-zA-Z0-9\.]+@[a-zA-Z0-9]+\.[a-zA-Z]{3}$')
-    if re_email.match(email):
+    if re.match('^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$', email):
         return True
     else:
         return False

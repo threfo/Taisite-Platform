@@ -224,7 +224,7 @@ class Model(object):
         if hasattr(subcls.Meta, 'index'):
             for index in subcls.Meta.index:
                 try:
-                    collection.create_index([index])
+                    collection.create_index(index)
                 except errors.OperationFailure:
                     pass
         for attr_name in dir(subcls):
