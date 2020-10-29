@@ -1,24 +1,11 @@
-FROM python:3.6
+FROM ccr.ccs.tencentyun.com/bello-devops/taisite-platform:base
 
-USER root
+COPY backend/ /src/backend/
+COPY dist/ /src/dist/
 
-ENV WORKING_DIR /app/AutoTest-Platform
+WORKDIR /src/backend
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend /${WORKING_DIR}/backend
-COPY ./dist /${WORKING_DIR}/dist
-
-RUN sh -c "echo 'Asia/Shanghai' > /etc/timezone" \
-    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple\
-    && cd ${WORKING_DIR}/backend\
-    && pip install -r ./requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-
-ENTRYPOINT cd ${WORKING_DIR}/backend; python run.py;
-
-
-
-
-
-
-
+EXPOSE 5050
+CMD ["python", "run.py"]
 
