@@ -571,8 +571,11 @@ def send_email(model, project_id, send_data):
     mail_list = send_data.get('mail_list')
     mail_title = send_data.get('mail_title')
     mail_content = send_data.get('mail_content')
+    attachment_name = send_data.get('attachment_name', 'attachment')
+    attachment_content = send_data.get('attachment_content')
 
-    if send_report_email(user_name, pass_word, mail_list, mail_title, mail_content):
+    if send_report_email(user_name, pass_word, mail_list, mail_title, mail_content,
+                         attachment_name, attachment_content):
         return {'status': 'ok', 'data': '邮件发送成功'}
     else:
         return {'status': 'failed', 'data': '邮件发送失败'}
