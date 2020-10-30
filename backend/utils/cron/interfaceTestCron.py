@@ -272,7 +272,7 @@ class Cron:
                 mesg_title = '接口测试平台告警'
                 mesg_content = "Dears: \n\n  【{}】 项目下 【{}】 测试任务中存在未通过的测试用例！测试报告详情内容请查阅附件 ～ \n\n   报告 id 为:" \
                                " {} \n\n   报告生成时间为: {}"\
-                    .format(project_name, 1, self.report_id, self.report_created_time.strftime('%Y-%m-%d %H:%M:%S'))
+                    .format(project_name, self.cron_name, self.report_id, self.report_created_time.strftime('%Y-%m-%d %H:%M:%S'))
                 mesg_attachment_name = f'接口测试报告_{self.report_created_time.strftime("%Y-%m-%d %H:%M:%S")}.xlsx'
                 mesg_attachment_content = TestReport.get_test_report_excel_bytes_io(self.report_id).read()
                 result_json = self.send_report_to_staff(project_id, self.alarm_mail_list, mesg_title, mesg_content,
