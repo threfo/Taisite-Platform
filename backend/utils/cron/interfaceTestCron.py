@@ -117,7 +117,7 @@ class Cron:
         self.report_created_time = datetime.datetime.now()
         self.failed_count = failed_count
 
-        execute_from = "WebHook" if hasattr(self, 'is_web_hook') and self.is_web_hook else "定时任务"
+        execute_from = "WebHook" if hasattr(self, 'is_web_hook') and self.is_web_hook else f"定时任务 - {self.cron_name}"
 
         raw_data = {
             "projectId": ObjectId(project_id),
