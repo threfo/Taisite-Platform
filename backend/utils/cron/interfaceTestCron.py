@@ -14,12 +14,11 @@ import time
 
 class Cron:
 
-    RETRY_LIMIT = 3  # 定时任务报错后重试次数限制
-
     def __init__(self, cron_name, test_case_suite_id_list, test_domain,  trigger_type, is_execute_forbiddened_case=False,
                  test_case_id_list=None, alarm_mail_list=None, is_ding_ding_notify=False, ding_ding_access_token=None,
                  ding_ding_notify_strategy=None, is_enterprise_wechat_notify=False, enterprise_wechat_access_token=None,
-                 enterprise_wechat_notify_strategy=None, is_web_hook=False, **trigger_args):
+                 enterprise_wechat_notify_strategy=None, is_web_hook=False, retry_limit=3, retry_interval=20,
+                 **trigger_args):
 
         if test_case_id_list is None:
             test_case_id_list = []
@@ -74,6 +73,8 @@ class Cron:
 
         self.cron_name = cron_name
         self.current_retry_count = 0  # 记录当前定时任务尝试次数
+        self.retry_limit = retry_limit  # 定时任务报错后重试次数限制
+        self.retry_interval = retry_interval  # 定时任务报错后重试时间间隔
 
     def get_cron_test_cases_list(self):
         if not self.is_execute_forbiddened_case:
@@ -237,7 +238,9 @@ class Cron:
 
             self.current_retry_count += 1 if self.failed_count > 0 else 0
 
-            if self.failed_count and self.current_retry_count <= self.RETRY_LIMIT:
+            if self.failed_count and self.current_retry_count <= self.retry_limit:
+
+                time.sleep(self.retry_interval)
                 # print(f'正在重试第 {self.current_retry_count} 次')
                 self.cron_mission()
 
