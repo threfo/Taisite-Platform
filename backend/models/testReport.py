@@ -31,6 +31,7 @@ test_report_detail_map = {
     "['testBaseInfo', 'headers']": '请求头',
     "['testBaseInfo', 'cookies']": '请求Cookie',
     "['testBaseInfo', 'presendParams']": '请求参数',
+    "['testBaseInfo', 'curl']": '复现 curl',
     "['testBaseInfo', 'checkHttpCode']": '状态码校验',
     "['responseHttpStatusCode']": '实际状态码',
     "['testBaseInfo', 'checkResponseData']": '数据校验',
