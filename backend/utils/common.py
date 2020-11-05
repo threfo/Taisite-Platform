@@ -609,6 +609,4 @@ def get_random_key(digit_num=16):
 
 if __name__ == '__main__':
     pass
-    print(generate_curl(url='https://www.baidu.com',
-                        headers={'Auth': 'Bear', 'content-type': 'application/json'},
-                        data={'username':1, 'password': 2}))
+
