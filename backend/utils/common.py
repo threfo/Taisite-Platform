@@ -12,6 +12,25 @@ from tzlocal import get_localzone
 import string
 
 
+def generate_curl(url, headers=None, data=None):
+
+    curl_headers = ''
+
+    if headers:
+        for k, v in headers.items():
+            curl_headers += f" -H '{k}: {v}'"
+
+    data = str(data).replace("'", '"')
+
+    curl_data = f" --data-binary '{data}'"
+
+    curl = f"curl '{url}'" \
+           f"{curl_headers}" \
+           f"{curl_data} "
+
+    return curl
+
+
 def get_offset_between_local_and_utc():
     ts = time.time()
     utc_offset = int((datetime.datetime.fromtimestamp(ts) - datetime.datetime.utcfromtimestamp(ts)).total_seconds() / 3600)
@@ -590,4 +609,6 @@ def get_random_key(digit_num=16):
 
 if __name__ == '__main__':
     pass
-
+    print(generate_curl(url='https://www.baidu.com',
+                        headers={'Auth': 'Bear', 'content-type': 'application/json'},
+                        data={'username':1, 'password': 2}))
