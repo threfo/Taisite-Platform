@@ -139,8 +139,6 @@ class TestReport(Model):
                 else:
                     detail_sheet.write(col_index + 1, index, str(common.dict_get(detail, locator)))
 
-
-
         workbook.close()
 
         bytes_io.seek(0)
