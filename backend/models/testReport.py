@@ -4,6 +4,7 @@
 from app import db
 from utils.mango import *
 from utils import common
+from utils.helpers import ExcelHelper
 import xlsxwriter
 from io import BytesIO
 import ast
@@ -81,9 +82,21 @@ class TestReport(Model):
         summary_sheet = workbook.add_worksheet(u'测试报告概览')
         detail_sheet = workbook.add_worksheet(u'测试报告详情')
 
+        # 设置测试报告表头 format
+
+        header_style = workbook.add_format()
+        header_style.set_bg_color("#00CCFF")
+        header_style.set_color("#FFFFFF")
+        header_style.set_bold()
+        header_style.set_border()
+
         # 测试报告概览表头
         for index, value in enumerate(test_report_summary_map.values()):
-            summary_sheet.write(0, index, value)
+            summary_sheet.write(0, index, value, header_style)
+
+        # 设置测试报告概览每列宽度
+        [ExcelHelper.ExcelSheetHelperFunctions.set_column_auto_width(summary_sheet, i)
+         for i in range(len(test_report_summary_map.values()))]
 
         # 测试报告概览数据
         for index, value in enumerate(test_report_summary_map.keys()):
@@ -93,13 +106,40 @@ class TestReport(Model):
 
         # 测试报告详情表头
         for index, value in enumerate(test_report_detail_map.values()):
-            detail_sheet.write(0, index, value)
+            detail_sheet.write(0, index, value, header_style)
+
+        # 设置测试报告详情每列宽度
+        [ExcelHelper.ExcelSheetHelperFunctions.set_column_auto_width(detail_sheet, i)
+         for i in range(len(test_report_detail_map.values()))]
+
+        test_result_pass_style = workbook.add_format()
+        test_result_pass_style.set_bg_color("#00ff44")
+        test_result_pass_style.set_color("#FFFFFF")
+        test_result_pass_style.set_bold()
+        test_result_pass_style.set_border()
+
+        test_result_failed_style = workbook.add_format()
+        test_result_failed_style.set_bg_color("#ff0026")
+        test_result_failed_style.set_color("#FFFFFF")
+        test_result_failed_style.set_bold()
+        test_result_failed_style.set_border()
 
         # 测试报告详情数据
         for index, locator in enumerate(test_report_detail_map.keys()):
             locator = ast.literal_eval(locator)
             for col_index, detail in enumerate(test_details):
-                detail_sheet.write(col_index + 1, index, str(common.dict_get(detail, locator)))
+                if 'testConclusion' in str(locator):
+                    test_result = str(common.dict_get(detail, locator))
+                    if '测试通过' in test_result:
+                        detail_sheet.write(col_index + 1, index,
+                                           test_result, test_result_pass_style)
+                    else:
+                        detail_sheet.write(col_index + 1, index,
+                                           test_result, test_result_failed_style)
+                else:
+                    detail_sheet.write(col_index + 1, index, str(common.dict_get(detail, locator)))
+
+
 
         workbook.close()
 
