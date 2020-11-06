@@ -73,6 +73,9 @@ class tester:
             if 'requestProtocol' in test_case and 'route' in test_case:
                 url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
                 test_case["url"] = url
+            test_case['curl'] = common.generate_curl(url=test_case["url"],
+                                                     headers=test_case["headers"],
+                                                     data=test_case['presendParams'])
             test_result["testBaseInfo"] = test_case
             test_result["testStartTime"] = test_start_datetime
             test_result["spendingTimeInSec"] = round(test_end_time - test_start_time, 3)
