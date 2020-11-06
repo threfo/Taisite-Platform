@@ -302,9 +302,8 @@ class Cron:
                         if not dingding_res.status_code == 200:
                             raise BaseException('钉钉发送异常: {}'.format(dingding_res.text))
 
-
                 mesg_title = '接口测试平台告警恢复提醒 ：）'
-                mesg_content = "Dears: \n\n {} 【{}】 项目下 【{}】 测试任务 (报告 id: {}) 中测试用例已全部恢复通过～ 最新测试报告详情内容请查阅附件 ～ \n\n   最新报告 id 为:" \
+                mesg_content = "Dears: \n\n 于 【{}】 【{}】 项目下 【{}】 测试任务 (报告 id: {}) 中报错测试用例已全部恢复通过～ 最新测试报告详情内容请查阅附件 ～ \n\n   最新报告 id 为:" \
                                " {} \n\n   最新报告生成时间为: {}" \
                     .format(self.recorded_first_failed_time[self.cron_name], project_name, self.cron_name,
                             self.recorded_first_failed_report_id[self.cron_name], self.report_id,
