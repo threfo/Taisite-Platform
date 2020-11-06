@@ -116,13 +116,19 @@ class TestReport(Model):
         test_result_pass_style.set_bg_color("#00ff44")
         test_result_pass_style.set_color("#FFFFFF")
         test_result_pass_style.set_bold()
-        test_result_pass_style.set_border()
+        # test_result_pass_style.set_border()
 
         test_result_failed_style = workbook.add_format()
         test_result_failed_style.set_bg_color("#ff0026")
         test_result_failed_style.set_color("#FFFFFF")
         test_result_failed_style.set_bold()
-        test_result_failed_style.set_border()
+        # test_result_failed_style.set_border()
+
+        failed_curl_style = workbook.add_format()
+        failed_curl_style.set_bg_color("#ffee00")
+        # failed_curl_style.set_color("#FFFFFF")
+        failed_curl_style.set_bold()
+        # failed_curl_style.set_border()
 
         # 测试报告详情数据
         for index, locator in enumerate(test_report_detail_map.keys()):
@@ -136,6 +142,13 @@ class TestReport(Model):
                     else:
                         detail_sheet.write(col_index + 1, index,
                                            test_result, test_result_failed_style)
+                elif 'curl' in str(locator):
+                    test_result_status = str(common.dict_get(detail, ['status']))
+                    if test_result_status == 'failed':
+                        detail_sheet.write(col_index + 1, index,
+                                           str(common.dict_get(detail, locator)), failed_curl_style)
+                    else:
+                        detail_sheet.write(col_index + 1, index, str(common.dict_get(detail, locator)))
                 else:
                     detail_sheet.write(col_index + 1, index, str(common.dict_get(detail, locator)))
 
