@@ -73,7 +73,8 @@ class tester:
             if 'requestProtocol' in test_case and 'route' in test_case:
                 url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
                 test_case["url"] = url
-            test_case['curl'] = common.generate_curl(url=test_case["url"],
+            test_case['curl'] = common.generate_curl(method=test_case["requestMethod"],
+                                                     url=test_case["url"],
                                                      headers=test_case["headers"],
                                                      data=test_case['presendParams'])
             test_result["testBaseInfo"] = test_case
@@ -101,7 +102,8 @@ class tester:
             if 'requestProtocol' in test_case and 'route' in test_case:
                 url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
                 test_case["url"] = url
-            test_case['curl'] = common.generate_curl(url=test_case["url"],
+            test_case['curl'] = common.generate_curl(method=test_case["requestMethod"],
+                                                     url=test_case["url"],
                                                      headers=test_case["headers"],
                                                      data=test_case['presendParams'])
             test_result["testBaseInfo"] = test_case
