@@ -12,7 +12,9 @@ from tzlocal import get_localzone
 import string
 
 
-def generate_curl(url, headers=None, data=None):
+def generate_curl(url, method='POST', headers=None, data=None):
+
+    curl_method = f' -X {method.upper()}'
 
     curl_headers = ''
 
@@ -20,11 +22,12 @@ def generate_curl(url, headers=None, data=None):
         for k, v in headers.items():
             curl_headers += f" -H '{k}: {v}'"
 
-    data = str(data).replace("'", '"')
+    data = str(data).replace("'", '"') if data else None
 
-    curl_data = f" --data-binary '{data}'"
+    curl_data = f" --data-binary '{data}'" if data else ''
 
     curl = f"curl '{url}'" \
+           f"{curl_method}" \
            f"{curl_headers}" \
            f"{curl_data} "
 
@@ -609,4 +612,5 @@ def get_random_key(digit_num=16):
 
 if __name__ == '__main__':
     pass
-
+    # print(generate_curl(method='get',url='https://www.baidu.com',
+    #                     headers={'Content-type': 'application/json'}))
