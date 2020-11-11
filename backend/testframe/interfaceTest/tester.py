@@ -163,6 +163,9 @@ class tester:
                 # dict 先转 str，方便全局变量替换
                 test_case['presendParams'] = str(test_case['presendParams'])
 
+                # 转换 fake 数据
+                test_case['presendParams'] = common.resolve_fake_var(pre_resolve_var=test_case['presendParams'])
+
                 # 全局替换
                 test_case['presendParams'] = common.resolve_global_var(pre_resolve_var=test_case['presendParams'],
                                                                        global_var_dic=self.global_vars)
