@@ -214,6 +214,7 @@ class tester:
                 response = session.request(url=url, method=method, json=json_data, headers=headers,
                                            verify=False) if use_json_data \
                     else session.request(url=url, method=method, data=json_data, headers=headers, verify=False)
+            # response.encoding = 'utf-8'
             # print(response.headers) TODO 请求头断言
         except BaseException as e:
             returned_data["status"] = 'failed'
@@ -223,8 +224,10 @@ class tester:
         test_case['headers'] = headers  # 重新赋值生成报告时用
 
         response_status_code = response.status_code
+
         returned_data["responseHttpStatusCode"] = response_status_code
-        returned_data["responseData"] = response.text
+
+        returned_data["responseData"] = response.content.decode('unicode-escape')
 
         try:
 
