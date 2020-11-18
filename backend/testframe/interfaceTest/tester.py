@@ -227,7 +227,10 @@ class tester:
 
         returned_data["responseHttpStatusCode"] = response_status_code
 
-        returned_data["responseData"] = response.content.decode('unicode-escape')
+        try:
+            returned_data["responseData"] = response.content.decode('unicode-escape')
+        except BaseException:
+            returned_data["responseData"] = response.text
 
         try:
 
