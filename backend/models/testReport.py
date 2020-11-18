@@ -80,7 +80,9 @@ class TestReport(Model):
         workbook = xlsxwriter.Workbook(bytes_io, {'in_memory': True})
 
         summary_sheet = workbook.add_worksheet(u'测试报告概览')
+        summary_sheet.freeze_panes(1, 0)
         detail_sheet = workbook.add_worksheet(u'测试报告详情')
+        detail_sheet.freeze_panes(1, 0)
 
         # 设置测试报告表头 format
 
