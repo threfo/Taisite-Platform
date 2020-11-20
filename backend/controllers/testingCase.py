@@ -37,7 +37,11 @@ def add_case(project_id, case_suite_id):
     request_data["createAt"] = datetime.datetime.utcnow()
     request_data["lastUpdateTime"] = datetime.datetime.utcnow()
     if "checkResponseTime" in request_data:
-        request_data["checkResponseTime"] = float(request_data["checkResponseTime"])
+        request_data["checkResponseTime"] = float(request_data["checkResponseTime"])\
+            if request_data["checkResponseTime"] else None
+    if "checkHttpCode" in request_data:
+        request_data["checkHttpCode"] = str(request_data["checkHttpCode"]) \
+            if request_data["checkHttpCode"] else ""
     filtered_data = TestingCase.filter_field(request_data, use_set_default=True)
     try:
         TestingCase.insert(filtered_data)
@@ -96,8 +100,12 @@ def update_case(project_id, case_suite_id, case_id):
 
     try:
         json_data = request.get_json()
-        if 'checkResponseTime' in json_data:
-            json_data['checkResponseTime'] = float(json_data['checkResponseTime'])
+        if "checkResponseTime" in json_data:
+            json_data["checkResponseTime"] = float(json_data["checkResponseTime"]) \
+                if json_data["checkResponseTime"] else None
+        if "checkHttpCode" in json_data:
+            json_data["checkHttpCode"] = str(json_data["checkHttpCode"]) \
+                if json_data["checkHttpCode"] else ""
         filtered_data = TestingCase.filter_field(json_data)
         for key, value in filtered_data.items():
             TestingCase.update({"_id": ObjectId(case_id)},
