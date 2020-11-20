@@ -36,6 +36,8 @@ def add_case(project_id, case_suite_id):
     request_data["testCaseType"] = 'interfaceTest'
     request_data["createAt"] = datetime.datetime.utcnow()
     request_data["lastUpdateTime"] = datetime.datetime.utcnow()
+    if "checkResponseTime" in request_data:
+        request_data["checkResponseTime"] = float(request_data["checkResponseTime"])
     filtered_data = TestingCase.filter_field(request_data, use_set_default=True)
     try:
         TestingCase.insert(filtered_data)
@@ -93,7 +95,10 @@ def update_case(project_id, case_suite_id, case_id):
                 return jsonify({'status': 'failed', 'data': '请求参数数据格式不正确!: %s' % e})
 
     try:
-        filtered_data = TestingCase.filter_field(request.get_json())
+        json_data = request.get_json()
+        if 'checkResponseTime' in json_data:
+            json_data['checkResponseTime'] = float(json_data['checkResponseTime'])
+        filtered_data = TestingCase.filter_field(json_data)
         for key, value in filtered_data.items():
             TestingCase.update({"_id": ObjectId(case_id)},
                                {'$set': {key: value}})
@@ -269,6 +274,7 @@ test_case_map = {
         'headers': '请求头部',
         'presendParams': '请求参数',
         'checkHttpCode': '状态码校验',
+        'checkResponseTime': '响应耗时校验/s',
         'checkResponseData': '正则校验',
         'checkResponseSimilarity': '文本相似度校验',
         'checkResponseNumber': '数值校验',
