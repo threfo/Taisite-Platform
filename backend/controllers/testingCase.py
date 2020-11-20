@@ -274,7 +274,7 @@ test_case_map = {
         'headers': '请求头部',
         'presendParams': '请求参数',
         'checkHttpCode': '状态码校验',
-        'checkResponseTime': '响应耗时校验/s',
+        'checkResponseTime': '耗时校验/s',
         'checkResponseData': '正则校验',
         'checkResponseSimilarity': '文本相似度校验',
         'checkResponseNumber': '数值校验',
