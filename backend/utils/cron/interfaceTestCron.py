@@ -22,7 +22,7 @@ class Cron:
     def __init__(self, cron_name, test_case_suite_id_list, test_domain,  trigger_type, is_execute_forbiddened_case=False,
                  test_case_id_list=None, alarm_mail_list=None, is_ding_ding_notify=False, ding_ding_access_token=None,
                  ding_ding_notify_strategy=None, is_enterprise_wechat_notify=False, enterprise_wechat_access_token=None,
-                 enterprise_wechat_notify_strategy=None, is_web_hook=False, retry_limit=3, retry_interval=20,
+                 enterprise_wechat_notify_strategy=None, is_web_hook=False, retry_limit=3, retry_interval=60,
                  **trigger_args):
 
         if test_case_id_list is None:
