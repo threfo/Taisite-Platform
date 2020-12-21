@@ -20,9 +20,12 @@ def generate_curl(url, method='POST', headers=None, data=None):
 
     curl_headers = ''
 
-    if headers:
+    if isinstance(headers, dict):  # {'Accept': 'application/json', 'Content-Type': 'application/json'}
         for k, v in headers.items():
             curl_headers += f" -H '{k}: {v}'"
+    elif isinstance(headers, list):  # [{'name': 'Accept', 'value': 'application/json'}, {'name': 'Content-Type', 'value': 'application/json'}]
+        for header in headers:
+            curl_headers += f" -H '{header.get('name', '')}: {header.get('value', '')}'"
 
     data = str(data).replace("'", '"') if data else None
 

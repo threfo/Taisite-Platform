@@ -7,7 +7,7 @@ from utils import common
 import ast
 from bson import ObjectId
 from threading import Thread
-
+import copy
 import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -52,8 +52,8 @@ class tester:
 
         self.test_result_list = test_result_list
 
-        if global_vars is None:
-            self.global_vars = {}
+        self._origin_global_vars = global_vars if global_vars else {}
+        self.global_vars = copy.deepcopy(self._origin_global_vars)
 
     # 异步方便返回测试启动是否成功的提示给前端
     @async_test
@@ -190,7 +190,7 @@ class tester:
                                     if isinstance(header['value'], str) else headers[header['name']]
                 else:
                     raise TypeError('headers must be list!')
-
+            # print(headers)
             if 'setGlobalVars' in test_case and not test_case['setGlobalVars'] in [[], {}, "", None]:
                 set_global_vars = test_case['setGlobalVars']
 
@@ -214,6 +214,11 @@ class tester:
                                                       in headers[x], headers.keys() if headers else {}))) > 0
 
             test_start = time.time()
+
+            test_case['headers'] = headers  # 重新赋值生成报告时用
+
+            test_case['dataMap'] = self._origin_global_vars  # 记录下通过数据仓库引入的变量
+
             if test_case['requestMethod'].lower() == 'get':
                 response = session.request(url=url, method=method, params=json_data, headers=headers, verify=False)
             else:
@@ -230,14 +235,13 @@ class tester:
             returned_data["testConclusion"].append('请求失败, 错误信息: <%s> ' % e)
             return returned_data
 
-        test_case['headers'] = headers  # 重新赋值生成报告时用
-
         response_status_code = response.status_code
 
         returned_data["responseHttpStatusCode"] = response_status_code
 
         try:
-            returned_data["responseData"] = response.content.decode('unicode-escape')
+            returned_data["responseData"] = response.text.encode('latin-1').decode('unicode-escape')
+
         except BaseException:
             returned_data["responseData"] = response.text
 
