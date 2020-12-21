@@ -224,9 +224,11 @@ class Cron:
         else:
             raise TypeError('定时任务执行中未找到任何可执行用例！')
 
+        _global_vars = self.global_vars if hasattr(self, 'global_vars') else {}
+
         tester_for_cron = tester(test_case_list=cron_test_cases_list,
                                  domain=self.test_domain,
-                                 global_vars=self.global_vars)
+                                 global_vars=_global_vars)
 
         total_test_start_time = time.time()
 
