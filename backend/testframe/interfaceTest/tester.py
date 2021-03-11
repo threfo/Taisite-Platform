@@ -1,4 +1,5 @@
 import requests
+requests.packages.urllib3.disable_warnings()
 import json
 import time
 import datetime
@@ -61,7 +62,8 @@ class tester:
                                          project_id, executor_nick_name, execution_mode, project_name):
         test_results = []
         total_test_start_time = time.time()
-        for test_case in self.test_case_list:
+        for index, test_case in enumerate(self.test_case_list):
+            print(f'{executor_nick_name} 正在运行 {project_name} 测试项目，进度: {index+1} / {len(self.test_case_list)}')
             backup_test_start = time.time()
             test_start_datetime = datetime.datetime.utcnow()
             test_result = self.execute_single_test(test_case)
@@ -69,11 +71,6 @@ class tester:
             backup_test_spending_time = round(backup_test_end - backup_test_start, 3)
             if 'lastManualTestResult' in test_case:
                 test_case.pop('lastManualTestResult')
-            domain = test_case["domain"] if 'domain' in test_case and isinstance(test_case["domain"], str) and \
-                                            not test_case["domain"].strip() == '' else self.domain
-            if 'requestProtocol' in test_case and 'route' in test_case:
-                url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
-                test_case["url"] = url
             test_case['curl'] = common.generate_curl(method=test_case["requestMethod"],
                                                      url=test_case["url"],
                                                      headers=test_case["headers"],
@@ -100,11 +97,6 @@ class tester:
             backup_test_spending_time = round(backup_test_end - backup_test_start, 3)
             if 'lastManualTestResult' in test_case:
                 test_case.pop('lastManualTestResult')
-            domain = test_case["domain"] if 'domain' in test_case and isinstance(test_case["domain"], str) and \
-                                            not test_case["domain"].strip() == '' else self.domain
-            if 'requestProtocol' in test_case and 'route' in test_case:
-                url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
-                test_case["url"] = url
             test_case['curl'] = common.generate_curl(method=test_case["requestMethod"],
                                                      url=test_case["url"],
                                                      headers=test_case["headers"],
@@ -120,6 +112,7 @@ class tester:
         returned_data = dict()
         returned_data["_id"] = test_case["_id"]
         returned_data["testConclusion"] = []
+        returned_data["status"] = 'ok'
         if not isinstance(test_case, dict):
             returned_data["status"] = 'failed'
             returned_data["testConclusion"].append('测试用例结构不正确！ ')
@@ -150,8 +143,9 @@ class tester:
         check_response_similarity = None
         set_global_vars = None  # for example {'status': ['status']}
 
-        domain = test_case["domain"] if 'domain' in test_case and isinstance(test_case["domain"], str) and \
-                                        not test_case["domain"].strip() == '' else self.domain
+        domain = common.resolve_global_var(test_case["domain"], self.global_vars)\
+            if 'domain' in test_case and isinstance(test_case["domain"], str)\
+               and not test_case["domain"].strip() == '' else self.domain
 
         try:
 
@@ -159,8 +153,10 @@ class tester:
                 test_case['route'] = \
                     common.resolve_global_var(pre_resolve_var=test_case['route'], global_var_dic=self.global_vars) \
                         if isinstance(test_case['route'], str) else test_case['route']
+                domain = domain.replace('https://', '').replace('http://', '')
+                test_case['route'] = '' if test_case['route'] == '/' else test_case['route']
                 url = '%s://%s%s' % (test_case['requestProtocol'].lower(), domain, test_case['route'])
-
+                test_case['url'] = url
             if 'requestMethod' in test_case:
                 method = test_case['requestMethod']
 
@@ -190,7 +186,7 @@ class tester:
                                     if isinstance(header['value'], str) else headers[header['name']]
                 else:
                     raise TypeError('headers must be list!')
-            # print(headers)
+            # (headers)
             if 'setGlobalVars' in test_case and not test_case['setGlobalVars'] in [[], {}, "", None]:
                 set_global_vars = test_case['setGlobalVars']
 
@@ -225,6 +221,11 @@ class tester:
                 response = session.request(url=url, method=method, json=json_data, headers=headers,
                                            verify=False) if use_json_data \
                     else session.request(url=url, method=method, data=json_data, headers=headers, verify=False)
+            origin_resp_text = copy.deepcopy(response.text)
+            response.encoding = 'gb18030'  # 解决 汕尾鲘门镇 汕尾��门镇 对比
+            resp_text_gb18030 = copy.deepcopy(response.text)
+            response.encoding = 'utf-8'
+            resp_text_unicode_escape = response.text.encode('utf-8').decode('unicode-escape') # 实习僧
             test_end = time.time()
             test_spending_time = round(test_end - test_start, 3)
             test_case['spendingTimeInSec'] = test_spending_time
@@ -314,13 +315,33 @@ class tester:
                                 for index, single_query in enumerate(query):
                                     query[index] = common.resolve_global_var(pre_resolve_var=single_query,
                                                                              global_var_dic=self.global_vars)
-                                result = re.search(regex, str(response.text))  # python 将regex字符串取了r''(原生字符串)
+
+                                try:
+                                    # 压缩成一行
+                                    regex = ''.join([line.replace(' ', '') for line in regex.splitlines()]).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                                    origin_resp_text = ''.join([line.replace(' ', '') for line in origin_resp_text.splitlines()]).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                                    resp_text_gb18030 = ''.join([line.replace(' ', '') for line in resp_text_gb18030.splitlines()]).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                                    resp_text_unicode_escape = ''.join([line.replace(' ', '') for line in resp_text_unicode_escape.splitlines()]).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                                except BaseException:
+                                    pass
+                                # print(regex)
+                                # print(origin_resp_text)
+                                # print(resp_text_gb18030)
+                                # print(resp_text_unicode_escape)
+                                # print(regex in origin_resp_text)
+                                # print(regex in resp_text_gb18030)
+                                # print(regex in resp_text_unicode_escape)
+
+                                result = regex in origin_resp_text or regex in resp_text_gb18030\
+                                         or regex in resp_text_unicode_escape
+
                                 if not result:
                                     returned_data["status"] = 'failed'
                                     returned_data["testConclusion"].append('判断响应值错误(查询语句为: %s),    响应值应满足正则: <%s>,\
                                                                                 实际值: <%s> (%s)。(正则匹配时会将数据转化成string)\t'
-                                                                           % (
-                                                                           query, regex, response.text, type(response.text)))
+                                                                           % (query, regex, response.text,
+                                                                              type(response.text)))
+
                         except BaseException as e:
                             returned_data["status"] = 'failed'
                             returned_data["testConclusion"].append('判断响应值时报错, 错误信息: <%s>。\t' % e)
@@ -328,13 +349,14 @@ class tester:
             # TODO 目前默认当 is_check_res_similarity_valid 和  is_check_res_number_valid 为真时，返回格式必须可转 json ，可优化
             is_test_failed = is_check_res_number_valid or is_check_res_similarity_valid
 
-            returned_data['status'] = 'failed' if is_test_failed else 'ok'
+            if is_test_failed:
+                returned_data['status'] = 'failed'
 
             returned_data["testConclusion"].append('服务器返回格式不是json, 错误信息: %s, 服务器返回为: %s '
                                                    % (e, response.text)) if returned_data.get('status') and \
                                                                             returned_data.get(
                                                                                 'status') == 'failed' else None
-            if returned_data['status'] == 'ok':
+            if returned_data.get('status') == 'ok':
                 returned_data["testConclusion"].append('测试通过')
 
             return returned_data
@@ -438,12 +460,45 @@ class tester:
                         returned_data["testConclusion"].append('未找到正则校验的Json值(查询语句为: %s),   服务器响应为: %s'
                                                                % (query, response_json))
                         return returned_data
-                    result = re.search(regex, str(real_value))  # python 将regex字符串取了r''(原生字符串)
+                    # TODO 可优化，尝试处理长字典字符串比较（东  区->东 区）
+                    try:
+                        regex = str(json.loads(regex)).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                        origin_resp_text = str(json.loads(origin_resp_text)).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                        resp_text_gb18030 = str(json.loads(resp_text_gb18030)).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+                        resp_text_unicode_escape = str(json.loads(resp_text_unicode_escape)).replace(' ', '').replace('\u3000', '').replace(r'\xa0', '')
+
+                    except BaseException as e:
+                        print(f'error: {e}')
+
+                    # print(regex[0:9999])
+                    # print(origin_resp_text[0:9999])
+                    # print(resp_text_gb18030[0:9999])
+                    # print(resp_text_unicode_escape[0:9999])
+                    # print(regex in origin_resp_text)
+                    # for index, char in enumerate(origin_resp_text):
+                    #     if not char == regex[index]:
+                    #         print(regex[index-10: index+10])
+                    #         print(origin_resp_text[index-10: index+10])
+                    #         break
+                    # print(regex in resp_text_gb18030)
+                    # print(regex in resp_text_unicode_escape)
+                    # print(re.search(regex, origin_resp_text))
+                    # print(re.search(regex, resp_text_gb18030))
+                    # print(re.search(regex, resp_text_unicode_escape))
+
+                    result = regex in origin_resp_text \
+                             or regex in resp_text_gb18030 \
+                             or regex in resp_text_unicode_escape \
+                             or re.search(regex, origin_resp_text) \
+                             or re.search(regex, resp_text_gb18030) \
+                             or re.search(regex, resp_text_unicode_escape)
+
                     if not result:
                         returned_data["status"] = 'failed'
                         returned_data["testConclusion"].append('判断响应值错误(查询语句为: %s),    响应值应满足正则: <%s>,\
                                                                     实际值: <%s> (%s)。(正则匹配时会将数据转化成string)\t'
                                                                % (query, regex, real_value, type(real_value)))
+
             except BaseException as e:
                 returned_data["status"] = 'failed'
                 returned_data["testConclusion"].append('判断响应值时报错, 错误信息: <%s>。\t' % e)
